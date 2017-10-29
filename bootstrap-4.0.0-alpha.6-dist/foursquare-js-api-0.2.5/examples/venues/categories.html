@@ -1,0 +1,128 @@
+<!-- 
+The MIT License
+
+Copyright (c) 2011 M.F.A. ten Veldhuis
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+ -->
+ 
+ <html>
+	<head>
+		<title>Foursquare JS API - Venues Endpoint</title>
+		
+		<script type="text/javascript" src="../../js/foursquare-js-api.js"></script>
+	</head>
+	<body>
+		<h1>App Credentials</h1>
+		<form id="client-form" onsubmit="return false;">
+			<label>Client ID*</label><br />
+			<input type="text" id="client-id-input" /><br />
+			
+			<label>Client Secret</label><br />
+			<input type="text" id="client-secret-input" /><br />
+			
+			<label>Redirect URI*</label><br />
+			<input type="text" id="redirect-uri-input" /><br />
+	
+			<button type="button" onclick="createClient();">Create Client</button>
+			<button type="button" onclick="authenticate();">Authenticate</button>
+		</form>
+				
+		<h1>Endpoint</h1>
+		<form id="endpoint-form" onsubmit="return false;">
+			<button type="button" onclick="categories();">Perform</button>
+		</form>		
+				
+		<div id="categories-container"></div>
+		
+		<script type="text/javascript">//<![CDATA[
+			document.getElementById("redirect-uri-input").value = location.href;
+
+			function createClient()
+			{
+				clientId = document.getElementById("client-id-input").value;
+				clientSecret = document.getElementById("client-secret-input").value;
+				redirectUri = document.getElementById("redirect-uri-input").value;
+				
+				var fsclient = new FourSquareClient(clientId, clientSecret, redirectUri, true);
+			}
+			
+			function authenticate()
+			{
+				clientId = document.getElementById("client-id-input").value;
+				clientSecret = document.getElementById("client-secret-input").value;
+				redirectUri = document.getElementById("redirect-uri-input").value;
+
+				var fsclient = new FourSquareClient(clientId, clientSecret, redirectUri, true);
+				fsclient.authenticate();
+			}
+
+			function categories()
+			{
+				var fsclient = new FourSquareClient(null, null, null, true);
+				fsclient.venuesClient.categories({ 
+					onSuccess: function(data)
+					{ 
+						var categoriesContainer = document.getElementById('categories-container');
+						if(categoriesContainer.firstChild)
+						{
+							categoriesContainer.removeChild(categoriesContainer.firstChild);
+						}
+
+						var parent = document.createElement("div");
+						categoriesContainer.appendChild(parent);
+						
+						console.log(data);
+						var header = document.createElement("h1");
+						parent.appendChild(header);
+
+						for(var idx = 0; idx < data.response.categories.length; idx++)
+						{
+							var category = data.response.categories[idx];
+
+							var catIcon = document.createElement("img");
+							catIcon.src = category.icon.prefix + "32" + category.icon.name;
+							parent.appendChild(catIcon);
+							
+							var catId = document.createElement("div");
+							catId.innerHTML = "<b>Id:</b> " + category.id;
+							parent.appendChild(catId);
+							
+							var catName = document.createElement("div");
+							catName.innerHTML = "<b>Name:</b> " + category.name;
+							parent.appendChild(catName);
+
+							var catNamePlural = document.createElement("div");
+							catNamePlural.innerHTML = "<b>Name (Plural):</b> " + category.pluralName;
+							parent.appendChild(catNamePlural);
+
+							var catNameShort = document.createElement("div");
+							catNameShort.innerHTML = "<b>Name (Short):</b> " + category.shortName;
+							parent.appendChild(catNameShort);
+						}
+					},
+					onFailure: function(data)
+					{
+						alert("Unable to retrieve categories.\nAre you sure you are authenticated?");
+					}
+				});
+			}
+		</script>
+	</body>
+</html>

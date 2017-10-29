@@ -1,0 +1,135 @@
+<!-- 
+The MIT License
+
+Copyright (c) 2011 M.F.A. ten Veldhuis
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+ -->
+ 
+ <html>
+	<head>
+		<title>Foursquare JS API - Venues Endpoint</title>
+		
+		<script type="text/javascript" src="../../js/foursquare-js-api.js"></script>
+	</head>
+	<body>
+		<h1>App Credentials</h1>
+		<form id="client-form" onsubmit="return false;">
+			<label>Client ID*</label><br />
+			<input type="text" id="client-id-input" /><br />
+			
+			<label>Client Secret</label><br />
+			<input type="text" id="client-secret-input" /><br />
+			
+			<label>Redirect URI*</label><br />
+			<input type="text" id="redirect-uri-input" /><br />
+	
+			<button type="button" onclick="createClient();">Create Client</button>
+			<button type="button" onclick="authenticate();">Authenticate</button>
+		</form>
+		
+		<h1>Endpoint</h1>
+		<form id="endpoint-form" onsubmit="return false;">
+			<label>Photo ID</label><br />
+			<input type="text" id="venue-id-input" value="49b15db9f964a520d5521fe3" />
+			
+			<button type="button" onclick="venues();">Perform</button>
+		</form>
+		
+		<div id="venue-container"></div>
+		
+		<script type="text/javascript">//<![CDATA[
+			var venueId = document.getElementById("venue-id-input").value;
+			
+			document.getElementById("redirect-uri-input").value = location.href;
+
+			function createClient()
+			{
+				clientId = document.getElementById("client-id-input").value;
+				clientSecret = document.getElementById("client-secret-input").value;
+				redirectUri = document.getElementById("redirect-uri-input").value;
+				
+				var fsclient = new FourSquareClient(clientId, clientSecret, redirectUri, true);
+			}
+			
+			function authenticate()
+			{
+				clientId = document.getElementById("client-id-input").value;
+				clientSecret = document.getElementById("client-secret-input").value;
+				redirectUri = document.getElementById("redirect-uri-input").value;
+
+				var fsclient = new FourSquareClient(clientId, clientSecret, redirectUri, true);
+				fsclient.authenticate();
+			}
+
+			function venues()
+			{
+				venueId = document.getElementById("venue-id-input").value;
+				
+				var fsclient = new FourSquareClient(null, null, null, true);
+				fsclient.venuesClient.venues(venueId, { 
+					onSuccess: function(data)
+					{ 
+						console.log(data);
+					
+						var venueContainer = document.getElementById('venue-container');
+						if(venueContainer.firstChild)
+						{
+							venueContainer.removeChild(venueContainer.firstChild);
+						}
+
+						var parent = document.createElement("div");
+						venueContainer.appendChild(parent);
+						
+						var name = document.createElement("h2");
+						name.innerHTML = data.response.venue.name; 
+						parent.appendChild(name);
+
+						for(var idx = 0; idx < data.response.venue.hereNow.groups.length; idx++)
+						{
+							var group = data.response.venue.hereNow.groups[idx];
+							
+							var hereNow = document.createElement("h3");
+							hereNow.innerHTML = group.name + " ("+ group.count +"): "; 
+							parent.appendChild(hereNow);
+	
+							var persons = document.createElement("ul");
+							venueContainer.appendChild(persons);
+							for(var jdx = 0; jdx < group.count; jdx++)
+							{
+								var person = document.createElement("li");
+								person.innerHTML = group.items[jdx].user.firstName;
+								if(group.items[jdx].user.lastName != undefined)
+								{
+									person.innerHTML += group.items[jdx].user.lastName;
+								}
+								
+								persons.appendChild(person);
+							}
+						}
+					},
+					onFailure: function(data)
+					{
+						alert("Unable to retrieve venue.\nAre you sure you are authenticated and the venue id is correct?");
+					}
+				});
+			}
+		</script>
+	</body>
+</html>
